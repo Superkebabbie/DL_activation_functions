@@ -4,41 +4,40 @@ from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.models import Sequential
 from termcolor import colored
 
-if __name__ == '__main__':
-    print(colored("TensorFLow version: ", 'blue') + tf.VERSION)
-    print(colored("tf.keras version: ", 'blue') + tf.keras.__version__)
+
+def train_and_test(activation='relu', optimizer='adam', output=False):
 
     #  Model definition
-    print(colored("Creating model:", 'yellow'))
+    print(colored("Creating model:", 'yellow')) if output else None
     model = Sequential()
 
     # Must define the input shape in the first layer of the neural network
     model.add(
-        tf.keras.layers.Conv2D(filters=64, kernel_size=2, padding='same', activation='relu', input_shape=(28, 28, 1)))
+        tf.keras.layers.Conv2D(filters=64, kernel_size=2, padding='same', activation=activation, input_shape=(28, 28, 1)))
     model.add(tf.keras.layers.MaxPooling2D(pool_size=2))
     model.add(tf.keras.layers.Dropout(0.3))
 
-    model.add(tf.keras.layers.Conv2D(filters=32, kernel_size=2, padding='same', activation='relu'))
+    model.add(tf.keras.layers.Conv2D(filters=32, kernel_size=2, padding='same', activation=activation))
     model.add(tf.keras.layers.MaxPooling2D(pool_size=2))
     model.add(tf.keras.layers.Dropout(0.3))
 
     model.add(tf.keras.layers.Flatten())
-    model.add(tf.keras.layers.Dense(256, activation='relu'))
+    model.add(tf.keras.layers.Dense(256, activation=activation))
     model.add(tf.keras.layers.Dropout(0.5))
     model.add(tf.keras.layers.Dense(10, activation='softmax'))
 
     # Take a look at the model summary
-    model.summary()
+    model.summary() if output else None
 
     # Model compilation
-    print(colored("\nModel compiling...", 'yellow'))
+    print(colored("\nModel compiling...", 'yellow')) if output else None
     model.compile(loss='categorical_crossentropy',
-                  optimizer='adam',
+                  optimizer=optimizer,
                   metrics=['accuracy'])
-    print(colored("Compilation done!", 'yellow'))
+    print(colored("Compilation done!", 'yellow'))  if output else None
 
     # Training model
-    print(colored("Starting training of model:", 'yellow'))
+    print(colored("Starting training of model:", 'yellow'))  if output else None
     (x_train, y_train), (x_test, y_test) = tf.keras.datasets.fashion_mnist.load_data()
 
     # Further break training data into train / validation sets (# put 5000 into validation set
@@ -66,7 +65,7 @@ if __name__ == '__main__':
               validation_data=(x_valid, y_valid),
               callbacks=[checkpointer])
 
-    print(colored("Training done!", 'yellow'))
+    print(colored("Training done!", 'yellow')) if output else None
 
     # Load the weights with the best validation accuracy
     model.load_weights('model.weights.best.hdf5')
@@ -74,3 +73,26 @@ if __name__ == '__main__':
     # Testing model
     score = model.evaluate(x_test, y_test, verbose=0)
     print('\n' + colored('Test accuracy: ', 'yellow'), score[1])
+    return score[1]
+
+
+if __name__ == '__main__':
+    print(colored("TensorFLow version: ", 'blue') + tf.VERSION)
+    print(colored("tf.keras version: ", 'blue') + tf.keras.__version__)
+
+    activation_functions = ['elu', 'relu', 'selu']
+    optimizers = ['adam', 'adamax', 'nadam']
+
+    # Iterate over the combinations
+    iterations = 1
+
+    result_matrix = []
+    for activation_function in activation_functions:
+        result_row = []
+        for optimizer in optimizers:
+            print(colored('Collecting data for: ', 'yellow') + activation_function + " & " + optimizer)
+            result_row.append(sum(train_and_test(activation_function, optimizer) for i in range(iterations))/iterations)
+
+        result_matrix.append(result_row)
+
+    print(result_matrix)
