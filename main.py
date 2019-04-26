@@ -1,4 +1,5 @@
 import tensorflow as tf
+import csv
 
 from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.models import Sequential
@@ -6,7 +7,7 @@ from termcolor import colored
 from numpy import std
 
 
-def train_and_test(activation='relu', optimizer='adam', output=False):
+def train_and_test(activation='relu', optimizer='adam', output=0):
 
     #  Model definition
     print(colored("Creating model:", 'yellow')) if output else None
@@ -65,7 +66,7 @@ def train_and_test(activation='relu', optimizer='adam', output=False):
               epochs=10,
               validation_data=(x_valid, y_valid),
               callbacks=[checkpointer],
-              verbose=0)
+              verbose=output)
 
     print(colored("Training done!", 'yellow')) if output else None
 
@@ -94,9 +95,20 @@ if __name__ == '__main__':
         for optimizer in optimizers:
             print(colored('Collecting data for: ', 'yellow') + activation_function + " & " + optimizer)
 
-            accuracies = [train_and_test(activation_function, optimizer) for i in range(iterations)]
+            accuracies = [train_and_test(activation_function, optimizer, output=1) for i in range(iterations)]
             result_row.append((sum(accuracies)/iterations, std(accuracies)))
 
         result_matrix.append(result_row)
+
+    # Write results to file
+    with open('results.cvs', mode='w') as results:
+        writer = csv.writer(results, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
+        writer.writerow([''] + optimizers)
+
+        for row in range(len(result_matrix)):
+
+            results_row = result_matrix[row]
+            writer.writerow([activation_functions[row]] + results_row)
 
     print(result_matrix)
