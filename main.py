@@ -3,6 +3,7 @@ import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.models import Sequential
 from termcolor import colored
+from numpy import std
 
 
 def train_and_test(activation='relu', optimizer='adam', output=False):
@@ -63,7 +64,8 @@ def train_and_test(activation='relu', optimizer='adam', output=False):
               batch_size=64,
               epochs=10,
               validation_data=(x_valid, y_valid),
-              callbacks=[checkpointer])
+              callbacks=[checkpointer],
+              verbose=0)
 
     print(colored("Training done!", 'yellow')) if output else None
 
@@ -81,17 +83,19 @@ if __name__ == '__main__':
     print(colored("tf.keras version: ", 'blue') + tf.keras.__version__)
 
     activation_functions = ['elu', 'relu', 'selu']
-    optimizers = ['adam', 'adamax', 'nadam']
+    optimizers = ['adadelta', 'adagrad', 'adam']
+
+    iterations = 50
 
     # Iterate over the combinations
-    iterations = 1
-
     result_matrix = []
     for activation_function in activation_functions:
         result_row = []
         for optimizer in optimizers:
             print(colored('Collecting data for: ', 'yellow') + activation_function + " & " + optimizer)
-            result_row.append(sum(train_and_test(activation_function, optimizer) for i in range(iterations))/iterations)
+
+            accuracies = [train_and_test(activation_function, optimizer) for i in range(iterations)]
+            result_row.append((sum(accuracies)/iterations, std(accuracies)))
 
         result_matrix.append(result_row)
 
