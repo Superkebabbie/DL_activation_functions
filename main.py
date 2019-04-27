@@ -19,12 +19,12 @@ def create_model(activation='relu', optimizer='adam', verbose=0):
 
     #  Model definition
     print(colored("Creating model:", 'yellow')) if verbose else None
-    model = Sequential()
+    model = Sequential(name=activation+optimizer)
 
     # Must define the input shape in the first layer of the neural network
     model.add(
-        tf.keras.layers.Conv2D(filters=64, kernel_size=2, padding='same', activation=activation,
-                               input_shape=(28, 28, 1)))
+        tf.keras.layers.Conv2D(filters=64, kernel_size=2, padding='same',
+                               activation=activation, input_shape=(28, 28, 1)))
     model.add(tf.keras.layers.MaxPooling2D(pool_size=2))
     model.add(tf.keras.layers.Dropout(0.3))
 
@@ -74,7 +74,7 @@ def train(model, x_train, y_train, x_valid, y_valid, verbose=0):
     y_train = tf.keras.utils.to_categorical(y_train, 10)
     y_valid = tf.keras.utils.to_categorical(y_valid, 10)
 
-    checkpointer = ModelCheckpoint(filepath='model.weights.best.hdf5', verbose=verbose, save_best_only=True)
+    checkpointer = ModelCheckpoint(filepath=model.name, verbose=verbose, save_best_only=True)
 
     start = time.time()
     model.fit(x_train,
@@ -106,7 +106,7 @@ def test(model, x_test, y_test, verbose=0):
     y_test = tf.keras.utils.to_categorical(y_test, 10)
 
     # Load the weights with the best validation accuracy
-    model.load_weights('model.weights.best.hdf5')
+    model.load_weights(model.name)
 
     # Testing model
     score = model.evaluate(x_test, y_test, verbose=0)
