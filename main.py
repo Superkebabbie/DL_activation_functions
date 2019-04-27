@@ -51,7 +51,7 @@ def create_model(activation='relu', optimizer='adam', verbose=0):
 
 def train(model, x_train, y_train, x_valid, y_valid, verbose=0):
     """
-    Trains a model for the input presented.
+    Trains and validates a model for the input presented.
     :param model: model to be trained.
     :param x_train: features of the training data.
     :param y_train: labels for the training data.
@@ -74,7 +74,7 @@ def train(model, x_train, y_train, x_valid, y_valid, verbose=0):
     y_train = tf.keras.utils.to_categorical(y_train, 10)
     y_valid = tf.keras.utils.to_categorical(y_valid, 10)
 
-    checkpointer = ModelCheckpoint(filepath=model.name, verbose=verbose, save_best_only=True)
+    checkpointer = ModelCheckpoint(filepath=model.name+'.hdf5', verbose=verbose, save_best_only=True)
 
     start = time.time()
     model.fit(x_train,
@@ -106,7 +106,7 @@ def test(model, x_test, y_test, verbose=0):
     y_test = tf.keras.utils.to_categorical(y_test, 10)
 
     # Load the weights with the best validation accuracy
-    model.load_weights(model.name)
+    model.load_weights(model.name+'.hdf5')
 
     # Testing model
     score = model.evaluate(x_test, y_test, verbose=0)
