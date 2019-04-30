@@ -51,7 +51,7 @@ def create_model(activation='relu', optimizer='adam', verbose=0):
     return model
 
 
-def train(model, x_train, y_train, x_valid, y_valid, verbose=0):
+def train(model, x_train, y_train, x_valid, y_valid, iteration, verbose=0):
     """
     Trains and validates a model for the input presented.
     :param model: model to be trained.
@@ -76,7 +76,7 @@ def train(model, x_train, y_train, x_valid, y_valid, verbose=0):
     y_train = tf.keras.utils.to_categorical(y_train, 10)
     y_valid = tf.keras.utils.to_categorical(y_valid, 10)
 
-    checkpointer = ModelCheckpoint(filepath=model.name+'.hdf5', verbose=verbose, save_best_only=True)
+    checkpointer = ModelCheckpoint(filepath=model.name+str(iteration)+'.hdf5', verbose=verbose, save_best_only=True)
 
     start = time.time()
     model.fit(x_train,
@@ -93,7 +93,7 @@ def train(model, x_train, y_train, x_valid, y_valid, verbose=0):
     return end - start
 
 
-def test(model, x_test, y_test, verbose=0):
+def test(model, x_test, y_test, iteration, verbose=0):
     """
     Will test the given model on the presented data.
     :param model: tf.keras.models.Sequential model.
@@ -108,7 +108,7 @@ def test(model, x_test, y_test, verbose=0):
     y_test = tf.keras.utils.to_categorical(y_test, 10)
 
     # Load the weights with the best validation accuracy
-    model.load_weights(model.name+'.hdf5')
+    model.load_weights(model.name+str(iteration)+'.hdf5')
 
     # Testing model
     score = model.evaluate(x_test, y_test, verbose=0)
@@ -143,6 +143,7 @@ def cross_validate(activation, optimizer, verbose=0):
 
     # Assign one fold validation, one test and all the rest train
     for test_fold in range(k):
+        print('test_fold =', test_fold)
         x_test = [np.asarray(x_all[i]) for i in fold_indices[test_fold]]
         y_test = [np.asarray(y_all[i]) for i in fold_indices[test_fold]]
 
@@ -159,10 +160,10 @@ def cross_validate(activation, optimizer, verbose=0):
             len(x_train), len(y_train), len(x_valid), len(y_valid), len(x_test), len(y_test))) if verbose else None
 
         # Create model, train and test it.
-        model = create_model(activation, optimizer, verbose=verbose)
+        model = create_model(activation, optimizer, verbose)
         time_to_train = train(model, np.asarray(x_train), np.asarray(y_train), np.asarray(x_valid), np.asarray(y_valid),
-                              verbose=verbose)
-        accuracy = test(model, np.asarray(x_test), np.asarray(y_test))
+                              test_fold, verbose)
+        accuracy = test(model, np.asarray(x_test), np.asarray(y_test), test_fold, verbose)
 
         times.append(time_to_train)
         accuracies.append(accuracy)
@@ -178,7 +179,7 @@ def run():
     optimizers = ['adadelta', 'adagrad', 'adam']
 
     # Iterate over the combinations
-    results = [[(cross_validate(activation, optimizer)) for optimizer in optimizers] for activation in activations]
+    results = [[(cross_validate(activation, optimizer, 1)) for optimizer in optimizers] for activation in activations]
 
     # Write results to file
     with open('results.cvs', mode='w') as results_csv:
