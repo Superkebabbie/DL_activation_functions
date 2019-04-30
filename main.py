@@ -143,6 +143,7 @@ def cross_validate(activation, optimizer, verbose=0):
 
     # Assign one fold validation, one test and all the rest train
     for test_fold in range(k):
+        print('test_fold =', test_fold)
         x_test = [np.asarray(x_all[i]) for i in fold_indices[test_fold]]
         y_test = [np.asarray(y_all[i]) for i in fold_indices[test_fold]]
 
@@ -159,10 +160,10 @@ def cross_validate(activation, optimizer, verbose=0):
             len(x_train), len(y_train), len(x_valid), len(y_valid), len(x_test), len(y_test))) if verbose else None
 
         # Create model, train and test it.
-        model = create_model(activation, optimizer, verbose=verbose)
+        model = create_model(activation, optimizer, verbose)
         time_to_train = train(model, np.asarray(x_train), np.asarray(y_train), np.asarray(x_valid), np.asarray(y_valid),
-                              verbose=verbose)
-        accuracy = test(model, np.asarray(x_test), np.asarray(y_test))
+                              verbose)
+        accuracy = test(model, np.asarray(x_test), np.asarray(y_test), verbose)
 
         times.append(time_to_train)
         accuracies.append(accuracy)
@@ -178,7 +179,7 @@ def run():
     optimizers = ['adadelta', 'adagrad', 'adam']
 
     # Iterate over the combinations
-    results = [[(cross_validate(activation, optimizer)) for optimizer in optimizers] for activation in activations]
+    results = [[(cross_validate(activation, optimizer, 1)) for optimizer in optimizers] for activation in activations]
 
     # Write results to file
     with open('results.cvs', mode='w') as results_csv:
