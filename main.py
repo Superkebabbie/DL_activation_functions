@@ -142,24 +142,26 @@ def cross_validate(activation, optimizer, verbose=0):
     accuracies = []
     times = []
     for test_fold in range(k):
-        x_test = [x_all[i] for i in fold_indices[test_fold]]
-        y_test = [y_all[i] for i in fold_indices[test_fold]]
-        rest = [x for x in range(k) if x != test_fold]
+        x_test = [np.asarray(x_all[i]) for i in fold_indices[test_fold]]
+        y_test = [np.asarray(y_all[i]) for i in fold_indices[test_fold]]
 
+        rest = [x for x in range(k) if x != test_fold]
         dev_fold = rest[random.randint(0, len(rest) - 1)]
-        x_valid = [x_all[i] for i in fold_indices[dev_fold]]
-        y_valid = [y_all[i] for i in fold_indices[dev_fold]]
+        x_valid = [np.asarray(x_all[i]) for i in fold_indices[dev_fold]]
+        y_valid = [np.asarray(y_all[i]) for i in fold_indices[dev_fold]]
+
         rest = [x for x in rest if x != dev_fold]
-        x_train = [x_all[i] for i in [item for sublist in [fold_indices[f] for f in rest] for item in sublist]]
-        y_train = [y_all[i] for i in [item for sublist in [fold_indices[f] for f in rest] for item in sublist]]
+        x_train = [np.asarray(x_all[i]) for i in [item for sublist in [fold_indices[f] for f in rest] for item in sublist]]
+        y_train = [np.asarray(y_all[i]) for i in [item for sublist in [fold_indices[f] for f in rest] for item in sublist]]
 
         print("#X_train:%d\t#Y_train: %d\n#X_valid:%d\t#Y_valid: %d\n#X_test:%d\t#Y_test: %d" % (
             len(x_train), len(y_train), len(x_valid), len(y_valid), len(x_test), len(y_test))) if verbose else None
 
         # Create model, train and test it.
-        model = create_model(activation, optimizer)
-        time_to_train = train(model, x_train, y_train, x_valid, y_valid)
-        accuracy = test(model, x_test, y_test)
+        model = create_model(activation, optimizer, verbose=1)
+        time_to_train = train(model, np.asarray(x_train), np.asarray(y_train), np.asarray(x_valid), np.asarray(y_valid),
+                              verbose=1)
+        accuracy = test(model, np.asarray(x_test), np.asarray(y_test))
 
         times.append(time_to_train)
         accuracies.append(accuracy)
