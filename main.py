@@ -1,6 +1,8 @@
 import tensorflow as tf
 import csv
 import time
+import random
+import numpy as np
 
 from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.models import Sequential
@@ -114,19 +116,55 @@ def test(model, x_test, y_test, verbose=0):
     return score[1]
 
 
-def cross_validate(activation, optimizer):
+def cross_validate(activation, optimizer, verbose=0):
     """
     Performs a cross-validation experiment on a newly created model using the desired parameters.
     :param activation:
     :param optimizer:
+    :param verbose:
     :return:
     """
     print(colored('Collecting data for: ', 'yellow') + activation + " & " + optimizer)
     (x_train, y_train), (x_test, y_test) = tf.keras.datasets.fashion_mnist.load_data()
 
-    # TODO add the cross validation code here
+    x_all = np.concatenate((x_train, x_test))
+    y_all = np.concatenate((y_train, y_test))
 
-    return mean_accuracy, std_accuracy, mean_time, std_time
+    k = 10
+    partition_size = len(x_all) // k  # 10-fold cross validation
+
+    fold_indices = [i for i in range(len(x_all))]
+    random.shuffle(fold_indices)  # disable for deterministic partitions
+    fold_indices = fold_indices[:-(len(x_all) % k) if len(x_all) % k != 0 else len(x_all)]  # ensures even folds
+    fold_indices = [fold_indices[n * partition_size:(n + 1) * partition_size] for n in range(k)]  # partition indexes
+
+    # Assign one fold validation, one test and all the rest train
+    accuracies = []
+    times = []
+    for test_fold in range(k):
+        x_test = [x_all[i] for i in fold_indices[test_fold]]
+        y_test = [y_all[i] for i in fold_indices[test_fold]]
+        rest = [x for x in range(k) if x != test_fold]
+
+        dev_fold = rest[random.randint(0, len(rest) - 1)]
+        x_valid = [x_all[i] for i in fold_indices[dev_fold]]
+        y_valid = [y_all[i] for i in fold_indices[dev_fold]]
+        rest = [x for x in rest if x != dev_fold]
+        x_train = [x_all[i] for i in [item for sublist in [fold_indices[f] for f in rest] for item in sublist]]
+        y_train = [y_all[i] for i in [item for sublist in [fold_indices[f] for f in rest] for item in sublist]]
+
+        print("#X_train:%d\t#Y_train: %d\n#X_valid:%d\t#Y_valid: %d\n#X_test:%d\t#Y_test: %d" % (
+            len(x_train), len(y_train), len(x_valid), len(y_valid), len(x_test), len(y_test))) if verbose else None
+
+        # Create model, train and test it.
+        model = create_model(activation, optimizer)
+        time_to_train = train(model, x_train, y_train, x_valid, y_valid)
+        accuracy = test(model, x_test, y_test)
+
+        times.append(time_to_train)
+        accuracies.append(accuracy)
+
+    return np.mean(accuracies), np.std(accuracies), np.mean(times), np.std(times)
 
 
 def run():
