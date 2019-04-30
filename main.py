@@ -138,9 +138,10 @@ def cross_validate(activation, optimizer, verbose=0):
     fold_indices = fold_indices[:-(len(x_all) % k) if len(x_all) % k != 0 else len(x_all)]  # ensures even folds
     fold_indices = [fold_indices[n * partition_size:(n + 1) * partition_size] for n in range(k)]  # partition indexes
 
-    # Assign one fold validation, one test and all the rest train
     accuracies = []
     times = []
+
+    # Assign one fold validation, one test and all the rest train
     for test_fold in range(k):
         x_test = [np.asarray(x_all[i]) for i in fold_indices[test_fold]]
         y_test = [np.asarray(y_all[i]) for i in fold_indices[test_fold]]
@@ -158,9 +159,9 @@ def cross_validate(activation, optimizer, verbose=0):
             len(x_train), len(y_train), len(x_valid), len(y_valid), len(x_test), len(y_test))) if verbose else None
 
         # Create model, train and test it.
-        model = create_model(activation, optimizer, verbose=1)
+        model = create_model(activation, optimizer, verbose=verbose)
         time_to_train = train(model, np.asarray(x_train), np.asarray(y_train), np.asarray(x_valid), np.asarray(y_valid),
-                              verbose=1)
+                              verbose=verbose)
         accuracy = test(model, np.asarray(x_test), np.asarray(y_test))
 
         times.append(time_to_train)
