@@ -59,7 +59,7 @@ def train(model, x_train, y_train, x_valid, y_valid, verbose=0):
     :param y_valid: labels for the validation data.
     :param verbose: controls the amount of logging done. 0 = no output, 1 is summarized output, 2 is detailed output.
     Defaults to 0.
-    :return: returns
+    :return: returns time to train as datetime object
     """
 
     # Training model
