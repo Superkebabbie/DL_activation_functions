@@ -179,7 +179,7 @@ def run():
     optimizers = ['adadelta', 'adagrad', 'adam']
 
     # Iterate over the combinations
-    results = [[(cross_validate(activation, optimizer, 1)) for optimizer in optimizers] for activation in activations]
+    results = [[(cross_validate(activation, optimizer, 0)) for optimizer in optimizers] for activation in activations]
 
     # Write results to file
     with open('results.cvs', mode='w') as results_csv:
